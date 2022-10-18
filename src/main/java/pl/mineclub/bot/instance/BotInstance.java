@@ -26,7 +26,7 @@ public class BotInstance {
     public BotInstance() throws InterruptedException, LoginException {
         jda = JDABuilder.createDefault("MTAxMzUyNjY0MTkzMjI1MTE0Ng.G_yq9-.qwq-85vKm8Wcl2nnu9wvmuqfrrNoDnNvzXz8eM", Arrays.asList(GatewayIntent.values()))
                 .setAutoReconnect(true)
-                .setActivity(Activity.listening("dc.kcode.pl"))
+                .setActivity(Activity.playing("na serwerze MineClub.PL"))
               .build().awaitReady();
 
         this.executorService = Executors.newSingleThreadScheduledExecutor();
