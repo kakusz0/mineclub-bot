@@ -29,7 +29,7 @@ public class CommandManager extends ListenerAdapter {
         commands.addCommands(
                 new CommandData("clear", "Wiadomosci do usuniecia").addOption(OptionType.INTEGER, "amount", "ilosc wiadomosci do usuniecia", true),
                 new CommandData("ogloszenie", "ODSTĘP MIEDZY WIADOMOSCIAMI: {n}").addOption(OptionType.STRING, "amount", "ODSTĘP MIEDZY WIADOMOSCIAMI: {n}", true),
-                new CommandData("message", "ODSTĘP MIEDZY WIADOMOSCIAMI: {n}").addOption(OptionType.STRING, "title", "tytul embeda", true).addOption(OptionType.STRING, "content", "ODSTĘP MIEDZY WIADOMOSCIAMI: {n}", true).addOption(OptionType.STRING, "footer", "opis footera", true).addOption(OptionType.STRING, "color", "kolor", true),
+                new CommandData("message", "ODSTĘP MIEDZY WIADOMOSCIAMI: {n}").addOption(OptionType.STRING, "title", "tytul embeda", true).addOption(OptionType.STRING, "content", "ODSTĘP MIEDZY WIADOMOSCIAMI: {n}", true).addOption(OptionType.STRING, "image", "url obrazka (wpisz null gdy nie chcesz)", true).addOption(OptionType.STRING, "footer", "opis footera", true).addOption(OptionType.INTEGER, "redcolor", "red kolor", true).addOption(OptionType.INTEGER, "greencolor", "green kolor", true).addOption(OptionType.INTEGER, "bluecolor", "blue kolor", true),
                 new CommandData("komentarz", "no zarycz no").addOption(OptionType.STRING, "amount", "ODSTĘP MIEDZY WIADOMOSCIAMI: {n}", true)
 //                new CommandData("changelog", "ODSTĘP MIEDZY WIADOMOSCIAMI: {n}").addOption(OptionType.STRING, "amount", "ODSTĘP MIEDZY WIADOMOSCIAMI: {n}", true)
 
