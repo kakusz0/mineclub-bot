@@ -25,7 +25,7 @@ public class ClearCommand implements CommandImpl {
     public void executeCommand(SlashCommandEvent event, Member member, TextChannel textChannel) {
         Role role = new RoleImpl(1008389781736140932L, member.getGuild());
         if (findRole(Objects.requireNonNull(event.getMember()), "\u2063           MineClub Team") == null) {
-            event.reply("nie mozesz").queue(message -> message.deleteOriginal().queueAfter(5, TimeUnit.SECONDS));
+            event.reply("nie mozesz").setEphemeral(true).queue(message -> message.deleteOriginal().queueAfter(5, TimeUnit.SECONDS));
             return;
         }
         List<Message> messages = textChannel.getHistory().retrievePast(Integer.parseInt(event.getOption("amount").getAsString())).complete();

@@ -19,8 +19,8 @@ public class MessageEvent extends ListenerAdapter {
         if(!event.getMessage().getContentRaw().isEmpty()) {
             if (event.getMember() == null) return;
             if (findRole(Objects.requireNonNull(event.getMember()), "perm.link") == null) {
-                if (event.getMessage().getContentRaw().startsWith("http") || event.getMessage().getContentRaw().startsWith("https") || event.getMessage().getContentRaw().startsWith("www") || event.getMessage().getContentRaw().contains(".pl") || event.getMessage().getContentRaw().contains(".eu") || event.getMessage().getContentRaw().contains(".ru") || event.getMessage().getContentRaw().contains(".com") || event.getMessage().getContentRaw().contains(".br") || event.getMessage().getContentRaw().contains(".fr") || event.getMessage().getContentRaw().contains(".uk")) {
-                    if (event.getChannel().getName().startsWith("t-")) return;
+                if (event.getMessage().getContentRaw().startsWith("http") || event.getMessage().getContentRaw().startsWith("https") || event.getMessage().getContentRaw().startsWith("www") || event.getMessage().getContentRaw().contains(".pl") || event.getMessage().getContentRaw().contains(".eu") || event.getMessage().getContentRaw().contains(".ru") || event.getMessage().getContentRaw().contains(".com") || event.getMessage().getContentRaw().contains(".br") || event.getMessage().getContentRaw().contains(".fr") || event.getMessage().getContentRaw().contains(".uk") || event.getMessage().getContentRaw().contains("invite/")|| event.getMessage().getContentRaw().contains("discord.gg")|| event.getMessage().getContentRaw().contains(".gg")) {
+                    if (!event.getChannel().getName().startsWith("t-")) return;
                     event.getMessage().delete().queue();
                 }
             }

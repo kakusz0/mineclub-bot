@@ -12,7 +12,7 @@ import java.util.List;
 public class JoinEvent extends ListenerAdapter {
     @Override
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
-        List<Role> roleList = new ArrayList<>(Arrays.asList(event.getGuild().getRoleById("1010815987962093610"),event.getGuild().getRoleById("1010815987962093610")));
-        roleList.forEach(role -> event.getGuild().addRoleToMember(event.getMember(), role).queue());
+        //List<Role> roleList = new ArrayList<>(Arrays.asList(event.getGuild().getRoleById("1010815987962093610"),event.getGuild().getRoleById("1010815987962093610")));
+        //roleList.forEach(role -> event.getGuild().addRoleToMember(event.getMember(), role).queue());
     }
 }

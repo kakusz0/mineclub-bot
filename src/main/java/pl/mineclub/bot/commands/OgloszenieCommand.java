@@ -21,15 +21,13 @@ public class OgloszenieCommand implements CommandImpl {
     @Override
     public void executeCommand(SlashCommandEvent event, Member member, TextChannel textChannel) {
         if(!textChannel.equals(discordBot.getJDA().getTextChannelById(943448858917228547L))){
-
-            event.reply("nie mozesz, wykonaj ta komende na kanale " +  discordBot.getJDA().getTextChannelById(943448858917228547L).getAsMention()).queue(message -> message.deleteOriginal().queueAfter(5, TimeUnit.SECONDS));
+            event.reply("nie mozesz, wykonaj ta komende na kanale " +  discordBot.getJDA().getTextChannelById(943448858917228547L).getAsMention()).setEphemeral(true).queue(message -> message.deleteOriginal().queueAfter(5, TimeUnit.SECONDS));
             return;
-
         }
         if (!member.getPermissions().contains(Permission.ADMINISTRATOR)) {
-            event.reply("nie mozesz").queue(message -> message.deleteOriginal().queueAfter(5, TimeUnit.SECONDS));
+            event.reply("nie mozesz").setEphemeral(true).queue(message -> message.deleteOriginal().queueAfter(5, TimeUnit.SECONDS));
         } else {
-            event.reply("Wykonano").queue(message -> message.deleteOriginal().queueAfter(5, TimeUnit.SECONDS));
+            event.reply("Wykonano").setEphemeral(true).queue(message -> message.deleteOriginal().queueAfter(5, TimeUnit.SECONDS));
         }
 
         discordBot.getJDA().getTextChannelById(943448858917228547L).sendMessage(discordBot.getEmbedBuilder().setColor(ConstantsHelper.color).setFooter("MineClub.PL - Ogłoszenia", ConstantsHelper.imgUrl).setTimestamp(Instant.now()).addField("**Ogłoszenie**", event.getOption("amount").getAsString().replace("{n}", "\n"), true).build()).queue();

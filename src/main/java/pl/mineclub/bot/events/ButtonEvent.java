@@ -26,10 +26,6 @@ public class ButtonEvent extends ListenerAdapter {
     }
 
     public Optional<String> findValue(SelectionMenuEvent event, String val){
-        if(activatedTickets.contains(event.getMember())) {
-            event.reply("Masz już ticket!").queue(message -> message.deleteOriginal().queueAfter(3, TimeUnit.SECONDS));
-            return Optional.empty();
-        }
         for(String str : event.getValues()){
             if(str.equalsIgnoreCase(val)){
                 activatedTickets.add(event.getMember());
@@ -39,16 +35,23 @@ public class ButtonEvent extends ListenerAdapter {
         return Optional.empty();
     }
 
+    private SelectionMenuEvent event;
+
+
     @Override
     public void onSelectionMenu(SelectionMenuEvent event) {
+        this.event = event;
         if (event.getMember().getGuild() != discordBot.getJDA().getGuildById(943448858917228544L)) return;
+        if(activatedTickets.contains(event.getMember())) {
+            event.reply("Dopiero stworzyłeś ticket!").setEphemeral(true).queue(message -> message.deleteOriginal().queueAfter(3, TimeUnit.SECONDS));
+            return;
+        }
         if (findValue(event, "blad").isPresent()) {
             Guild guild = event.getMember().getGuild();
             guild.getCategoryById("1013814607988670514").createTextChannel("blad-" + event.getInteraction().getUser().getAsTag().replace("#", ""))
                     .addPermissionOverride(event.getMember(), EnumSet.of(Permission.VIEW_CHANNEL), null)
                     .addPermissionOverride(guild.getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
                     .queue();
-            event.deferReply().queue(message -> message.deleteOriginal().queueAfter(1, TimeUnit.SECONDS));
         }
         if (findValue(event, "backup").isPresent()) {
             Guild guild = event.getMember().getGuild();
@@ -56,7 +59,6 @@ public class ButtonEvent extends ListenerAdapter {
                     .addPermissionOverride(event.getMember(), EnumSet.of(Permission.VIEW_CHANNEL), null)
                     .addPermissionOverride(guild.getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
                     .queue();
-            event.deferReply().queue(message -> message.deleteOriginal().queueAfter(1, TimeUnit.SECONDS));
         }
         if (findValue(event, "strona").isPresent()) {
             Guild guild = event.getMember().getGuild();
@@ -64,7 +66,6 @@ public class ButtonEvent extends ListenerAdapter {
                     .addPermissionOverride(event.getMember(), EnumSet.of(Permission.VIEW_CHANNEL), null)
                     .addPermissionOverride(guild.getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
                     .queue();
-            event.deferReply().queue(message -> message.deleteOriginal().queueAfter(1, TimeUnit.SECONDS));
         }
         if (findValue(event, "partner").isPresent()) {
             Guild guild = event.getMember().getGuild();
@@ -72,7 +73,6 @@ public class ButtonEvent extends ListenerAdapter {
                     .addPermissionOverride(event.getMember(), EnumSet.of(Permission.VIEW_CHANNEL), null)
                     .addPermissionOverride(guild.getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
                     .queue();
-            event.deferReply().queue(message -> message.deleteOriginal().queueAfter(1, TimeUnit.SECONDS));
         }
         if (findValue(event, "media").isPresent()) {
             Guild guild = event.getMember().getGuild();
@@ -80,7 +80,6 @@ public class ButtonEvent extends ListenerAdapter {
                     .addPermissionOverride(event.getMember(), EnumSet.of(Permission.VIEW_CHANNEL), null)
                     .addPermissionOverride(guild.getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
                     .queue();
-            event.deferReply().queue(message -> message.deleteOriginal().queueAfter(1, TimeUnit.SECONDS));
         }
     }
 
@@ -93,7 +92,7 @@ public class ButtonEvent extends ListenerAdapter {
         if (event.getComponentId().equals("verify")) {
             List<Role> roleList = new ArrayList<>(Arrays.asList(event.getGuild().getRoleById("1008688791009112065"), event.getGuild().getRoleById("1008688936614375544")));
             roleList.forEach(role -> event.getGuild().addRoleToMember(event.getMember(), role).queue());
-            event.reply("Pomyślnie zweryfikowano!").queue(message -> message.deleteOriginal().queueAfter(3, TimeUnit.SECONDS));
+            event.reply("Pomyślnie zweryfikowano!").setEphemeral(true).queue(message -> message.deleteOriginal().queueAfter(3, TimeUnit.SECONDS));
         }
         if (event.getComponentId().equals("close")) {
             activatedTickets.remove(event.getMember());
@@ -113,7 +112,8 @@ public class ButtonEvent extends ListenerAdapter {
     public void onTextChannelCreate(TextChannelCreateEvent event) {
         TextChannel textChannel = event.getChannel();
         if (textChannel.getParent().getName().contains("ticketów")) {
-            discordBot.getJDA().getTextChannelById("944154297615151134").sendMessage("Stworzono ticket " + textChannel.getAsMention()).queue(message -> message.delete().queueAfter(10, TimeUnit.SECONDS));
+            this.event.reply("Zalożono ticket " + textChannel.getAsMention()).setEphemeral(true).queue();
+            //discordBot.getJDA().getTextChannelById("944154297615151134").sendMessage("Stworzono ticket " + textChannel.getAsMention()).queue(message -> message.delete().queueAfter(10, TimeUnit.SECONDS));
             textChannel.sendMessage(discordBot.getEmbedBuilder().addField("Zamknij ticket",
                                     "Kliknij aby zakonczyc rozmowe z administracja", true)
                             .setColor(ConstantsHelper.color)
