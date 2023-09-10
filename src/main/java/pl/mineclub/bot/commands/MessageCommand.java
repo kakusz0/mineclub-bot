@@ -37,10 +37,10 @@ public class MessageCommand implements CommandImpl {
     public Role findRole(Member member, String name) {
         return member.getRoles().stream().filter(role -> role.getName().equals(name)).findFirst().orElse(null);
     }
-
+    //"\u2063           MineClub Team"
     @Override
     public void executeCommand(SlashCommandEvent event, Member member, TextChannel textChannel) {
-        if (findRole(Objects.requireNonNull(event.getMember()), "\u2063           MineClub Team") == null) {
+        if (findRole(Objects.requireNonNull(event.getMember()), "・Zarząd Serwera") == null) {
             event.reply("nie mozesz").setEphemeral(true).queue();
             return;
         }

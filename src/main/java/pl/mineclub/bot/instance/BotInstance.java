@@ -9,7 +9,9 @@ import pl.mineclub.bot.events.ButtonEvent;
 import pl.mineclub.bot.events.JoinEvent;
 import pl.mineclub.bot.events.MessageEvent;
 import pl.mineclub.bot.events.PropositionEvent;
+import pl.mineclub.bot.managers.AnkietaManager;
 import pl.mineclub.bot.managers.CommandManager;
+import pl.mineclub.bot.runnables.UpdateAnkietaScheduler;
 import pl.mineclub.bot.runnables.UpdateStatsScheduler;
 
 import javax.security.auth.login.LoginException;
@@ -23,6 +25,9 @@ public class BotInstance {
     private final EmbedBuilder embedBuilder;
     private final ScheduledExecutorService executorService;
     public final CommandManager commandManager;
+
+    public final AnkietaManager ankietaManager;
+
 
     private int currentIndex = 0;
 
@@ -48,8 +53,10 @@ public class BotInstance {
 
 
         this.commandManager = new CommandManager(this);
-        jda.addEventListener(this.commandManager, new MessageEvent(), new JoinEvent(), new PropositionEvent(this), new ButtonEvent(this));
-        //this.executorService.scheduleAtFixedRate(new UpdateStatsScheduler(this),1,3,TimeUnit.SECONDS);
+        this.ankietaManager = new AnkietaManager();
+        jda.addEventListener(this.commandManager, new MessageEvent(), new JoinEvent(this), new PropositionEvent(this), new ButtonEvent(this));
+        this.executorService.scheduleAtFixedRate(new UpdateStatsScheduler(this),1,3,TimeUnit.SECONDS);
+        this.executorService.scheduleAtFixedRate(new UpdateAnkietaScheduler(this),1,3,TimeUnit.SECONDS);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 if (this.executorService.awaitTermination(5, TimeUnit.SECONDS)) {
