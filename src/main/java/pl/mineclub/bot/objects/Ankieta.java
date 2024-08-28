@@ -1,7 +1,6 @@
 package pl.mineclub.bot.objects;
 
 
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
 public class Ankieta {

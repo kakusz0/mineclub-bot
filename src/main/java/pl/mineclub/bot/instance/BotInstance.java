@@ -1,16 +1,13 @@
 package pl.mineclub.bot.instance;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import pl.mineclub.bot.events.ButtonEvent;
-import pl.mineclub.bot.events.JoinEvent;
 import pl.mineclub.bot.events.MessageEvent;
-import pl.mineclub.bot.events.PropositionEvent;
-import pl.mineclub.bot.managers.AnkietaManager;
-import pl.mineclub.bot.managers.CommandManager;
 import pl.mineclub.bot.runnables.UpdateAnkietaScheduler;
 import pl.mineclub.bot.runnables.UpdateStatsScheduler;
 
@@ -20,19 +17,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Getter
+@Setter
 public class BotInstance {
     private final JDA jda;
     private final EmbedBuilder embedBuilder;
     private final ScheduledExecutorService executorService;
-    public final CommandManager commandManager;
-
-    public final AnkietaManager ankietaManager;
-
-
     private int currentIndex = 0;
 
+    @Getter
+    private static BotInstance instance;
+
     public BotInstance() throws InterruptedException, LoginException {
-        jda = JDABuilder.createDefault("MTAxMzUyNjY0MTkzMjI1MTE0Ng.G_yq9-.qwq-85vKm8Wcl2nnu9wvmuqfrrNoDnNvzXz8eM", Arrays.asList(GatewayIntent.values()))
+        instance = this;
+        this.jda = JDABuilder.createDefault("MTI3MjkzOTM0MTk3NDMzOTY2OA.GcoaZZ.CEPv0uogkgZ4aaYEd3mM-40Vv9gRS_9UCiy2_k", Arrays.asList(GatewayIntent.values()))
                 .setAutoReconnect(true)
                 .setActivity(Activity.playing("na serwerze MineClub.PL"))
                 .build().awaitReady();
@@ -41,20 +39,18 @@ public class BotInstance {
         this.executorService = Executors.newSingleThreadScheduledExecutor();
 
 
-        executorService.scheduleWithFixedDelay(() -> {
+        this.executorService.scheduleWithFixedDelay(() -> {
             if(currentIndex == 0) {
-                jda.getPresence().setActivity(Activity.playing("na serwerze MineClub.PL"));
+                jda.getPresence().setActivity(Activity.playing("na serwerze mineclub.pl"));
             } else {
-                jda.getPresence().setActivity(Activity.watching("stronę https://MineClub.PL"));
+                jda.getPresence().setActivity(Activity.watching("stronę mineclub.pl"));
             }
             currentIndex++;
             if (this.currentIndex > 1) currentIndex = 0;
         }, 0, 30, TimeUnit.SECONDS);
 
 
-        this.commandManager = new CommandManager(this);
-        this.ankietaManager = new AnkietaManager();
-        jda.addEventListener(this.commandManager, new MessageEvent(), new JoinEvent(this), new PropositionEvent(this), new ButtonEvent(this));
+        this.jda.addEventListener(new MessageEvent());
         this.executorService.scheduleAtFixedRate(new UpdateStatsScheduler(this),1,3,TimeUnit.SECONDS);
         this.executorService.scheduleAtFixedRate(new UpdateAnkietaScheduler(this),1,3,TimeUnit.SECONDS);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -73,11 +69,4 @@ public class BotInstance {
 
     }
 
-    public JDA getJDA() {
-        return jda;
-    }
-
-    public EmbedBuilder getEmbedBuilder() {
-        return embedBuilder;
-    }
 }
