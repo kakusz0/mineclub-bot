@@ -3,7 +3,9 @@ package pl.mineclub.bot.events;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -19,6 +21,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class MessageEvent extends ListenerAdapter {
 
@@ -28,6 +32,9 @@ public class MessageEvent extends ListenerAdapter {
     public Role findRole(Member member, String name) {
         return member.getRoles().stream().filter(role -> role.getName().equals(name)).findFirst().orElse(null);
     }
+
+
+
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
@@ -47,8 +54,9 @@ public class MessageEvent extends ListenerAdapter {
                 return;
             }
             handleCommand(event, message);
-            event.getMessage().delete().queueAfter(1, TimeUnit.SECONDS);
+
         }
+
     }
 
 
@@ -78,10 +86,77 @@ public class MessageEvent extends ListenerAdapter {
                 }
                 break;
             }
+            case "clear":{
+                if (parts.length > 1) {
+                    String response = parts[1];
+                    TextChannel channel = event.getChannel().asTextChannel();
+                    int amount;
+                    try {
+                        amount = Integer.parseInt(response);
+                        if (amount < 2 || amount > 100) {
+                            event.getMessage().reply("Możesz usunąć od 2 do 100 wiadomości.")
+                                    .queue(msg -> msg.delete().queueAfter(3, TimeUnit.SECONDS));
+                            return;
+                        }
+                    } catch (NumberFormatException e) {
+                        event.getMessage().reply("Niepoprawny format liczby.")
+                                .queue(msg -> msg.delete().queueAfter(3, TimeUnit.SECONDS));
+                        return;
+                    }
+                    channel.getHistory().retrievePast(amount).queue(
+                            messages -> {
+                                // Oddzielanie wiadomości starszych i młodszych niż 2 tygodnie
+                                List<Message> oldMessages = messages.stream()
+                                        .filter(msg -> msg.getTimeCreated().isBefore(java.time.OffsetDateTime.now().minusWeeks(2)))
+                                        .collect(Collectors.toList());
+                                List<Message> recentMessages = messages.stream()
+                                        .filter(msg -> !oldMessages.contains(msg))
+                                        .collect(Collectors.toList());
 
+                                // Usuwanie wiadomości młodszych niż 2 tygodnie
+                                if (!recentMessages.isEmpty()) {
+                                    channel.deleteMessages(recentMessages).queue(
+                                            success -> event.getMessage().reply("Usunięto " + recentMessages.size() + " wiadomości.").queue(msg -> msg.delete().queueAfter(3, TimeUnit.SECONDS)),
+                                            failure -> event.getMessage().reply("Nie udało się usunąć wiadomości.").queue(msg -> msg.delete().queueAfter(3, TimeUnit.SECONDS))
+                                    );
+                                }
+
+                                // Usuwanie wiadomości starszych niż 2 tygodnie, pojedynczo
+                                AtomicInteger counter = new AtomicInteger(oldMessages.size());
+                                for (Message oldMessage : oldMessages) {
+                                    oldMessage.delete().queue(
+                                            success -> {
+                                                if (counter.decrementAndGet() == 0) {
+                                                    // Wysłanie odpowiedzi po usunięciu wszystkich starszych wiadomości
+                                                    event.getMessage().reply("Usunięto wszystkie starsze wiadomości.")
+                                                            .queue(msg -> msg.delete().queueAfter(3, TimeUnit.SECONDS));
+                                                }
+                                            },
+                                            failure -> {
+                                                if (counter.decrementAndGet() == 0) {
+                                                    // Wysłanie odpowiedzi po zakończeniu próby usunięcia wszystkich starszych wiadomości, nawet jeśli niektóre się nie powiodły
+                                                    event.getMessage().reply("Niektóre starsze wiadomości nie mogły zostać usunięte.")
+                                                            .queue(msg -> msg.delete().queueAfter(3, TimeUnit.SECONDS));
+                                                }
+                                            }
+                                    );
+                                }
+                            },
+                            failure -> event.getMessage().reply("Nie udało się pobrać historii wiadomości").queue(msg -> msg.delete().queueAfter(3, TimeUnit.SECONDS))
+                    );
+                } else {
+                    event.getMessage().reply("Proszę podać ilosc wiadomości do usuniecia.")
+                            .queue(msg -> msg.delete().queueAfter(3, TimeUnit.SECONDS));
+                }
+                break;
+            }
             default:
                 event.getMessage().reply("Nieznana komenda.").queue(msg -> msg.delete().queueAfter(3, TimeUnit.SECONDS));
+
         }
+        if(command.equals("clear")) return;
+
+        event.getMessage().delete().queueAfter(2, TimeUnit.SECONDS);
     }
 
 
@@ -114,6 +189,7 @@ public class MessageEvent extends ListenerAdapter {
         if (imageUrl != null && !imageUrl.isEmpty()) {
             embed.setImage(imageUrl);
         }
+        embed.clear();
         event.getChannel().sendMessageEmbeds(embed.build()).queue();
     }
 
@@ -189,4 +265,9 @@ public class MessageEvent extends ListenerAdapter {
         num2 = 3;
         answer = num1 + num2;
     }
+
+
+
+
+
 }

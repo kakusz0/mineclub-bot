@@ -7,11 +7,16 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import pl.mineclub.bot.events.JoinEvent;
 import pl.mineclub.bot.events.MessageEvent;
+import pl.mineclub.bot.events.NumberEvent;
+import pl.mineclub.bot.events.ReactionEvent;
+import pl.mineclub.bot.managers.MySQLManager;
 import pl.mineclub.bot.runnables.UpdateAnkietaScheduler;
 import pl.mineclub.bot.runnables.UpdateStatsScheduler;
 
 import javax.security.auth.login.LoginException;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -23,6 +28,7 @@ public class BotInstance {
     private final JDA jda;
     private final EmbedBuilder embedBuilder;
     private final ScheduledExecutorService executorService;
+    private final MySQLManager mysqlManager;
     private int currentIndex = 0;
 
     @Getter
@@ -37,7 +43,7 @@ public class BotInstance {
 
 
         this.executorService = Executors.newSingleThreadScheduledExecutor();
-
+        this.mysqlManager = new MySQLManager("localhost", 3306, "trzeci", "24039rgtnsddeasef2w3", "mineclub");
 
         this.executorService.scheduleWithFixedDelay(() -> {
             if(currentIndex == 0) {
@@ -50,14 +56,22 @@ public class BotInstance {
         }, 0, 30, TimeUnit.SECONDS);
 
 
-        this.jda.addEventListener(new MessageEvent());
+        NumberEvent numberEvent = new NumberEvent();
+        this.jda.addEventListener(new ReactionEvent(), new MessageEvent(), new JoinEvent(), numberEvent);
         this.executorService.scheduleAtFixedRate(new UpdateStatsScheduler(this),1,3,TimeUnit.SECONDS);
         this.executorService.scheduleAtFixedRate(new UpdateAnkietaScheduler(this),1,3,TimeUnit.SECONDS);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
+                try {
+                    numberEvent.saveNumbersToDatabase();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
                 if (this.executorService.awaitTermination(5, TimeUnit.SECONDS)) {
                     System.out.println("Async shutdown");
+
                     this.executorService.shutdown();
+
                 }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -65,7 +79,11 @@ public class BotInstance {
         }));
 
         this.embedBuilder = new EmbedBuilder();
-
+        try {
+            numberEvent.loadNumbersFromDatabase();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 
