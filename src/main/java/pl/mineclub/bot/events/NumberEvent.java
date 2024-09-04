@@ -23,13 +23,7 @@ public class NumberEvent extends ListenerAdapter {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        BotInstance.getInstance().getExecutorService().scheduleAtFixedRate(() -> {
-            try {
-                saveNumbersToDatabase();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }, 30, 60, TimeUnit.SECONDS);
+        BotInstance.getInstance().getExecutorService().scheduleAtFixedRate(this::saveNumbersToDatabase, 5, 10, TimeUnit.MINUTES);
     }
 
     @Override
@@ -68,15 +62,23 @@ public class NumberEvent extends ListenerAdapter {
         }
     }
 
-    public void saveNumbersToDatabase() throws SQLException {
-        String query = "INSERT INTO mineclub_bot (number) VALUES (?) ON DUPLICATE KEY UPDATE number = VALUES(number)";
-        try (PreparedStatement statement = BotInstance.getInstance().getMysqlManager().getHikariDataSource().getConnection().prepareStatement(query)) {
+    public void saveNumbersToDatabase() {
+            String query = "INSERT INTO mineclub_bot (number) VALUES (?) ON DUPLICATE KEY UPDATE number = VALUES(number)";
+        try (PreparedStatement statement = BotInstance.getInstance()
+                .getMysqlManager()
+                .getHikariDataSource()
+                .getConnection()
+                .prepareStatement(query)) {
+
             for (Long number : numberMap.values()) {
                 statement.setLong(1, number);
                 statement.executeUpdate();
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            System.out.printf("saved numbers %d%n", numberMap.size());
         }
-        System.out.printf("saved numbers %d%n", numberMap.size());
     }
 
     private long getLastNumber() {

@@ -53,6 +53,27 @@ public class MySQLManager {
         }
 
 
+        String createTableQuery2 = """
+                CREATE TABLE IF NOT EXISTS mineclub_tickets (
+                    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                    channel_id BIGINT,
+                    channel_name VARCHAR(255),
+                    content TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """;
+
+        try (Connection connection = this.hikariDataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(createTableQuery2)) {
+
+
+            statement.executeUpdate();
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void addColumnIfNotExists(Connection connection, String tableName, String columnName, String columnDefinition) {

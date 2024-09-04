@@ -6,11 +6,14 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
+import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import pl.mineclub.bot.events.JoinEvent;
-import pl.mineclub.bot.events.MessageEvent;
-import pl.mineclub.bot.events.NumberEvent;
-import pl.mineclub.bot.events.ReactionEvent;
+import org.jetbrains.annotations.NotNull;
+import pl.mineclub.bot.commands.CommandManager;
+import pl.mineclub.bot.events.*;
 import pl.mineclub.bot.managers.MySQLManager;
 import pl.mineclub.bot.runnables.UpdateAnkietaScheduler;
 import pl.mineclub.bot.runnables.UpdateStatsScheduler;
@@ -18,28 +21,34 @@ import pl.mineclub.bot.runnables.UpdateStatsScheduler;
 import javax.security.auth.login.LoginException;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Getter
 @Setter
-public class BotInstance {
+public class BotInstance  {
     private final JDA jda;
     private final EmbedBuilder embedBuilder;
     private final ScheduledExecutorService executorService;
     private final MySQLManager mysqlManager;
     private int currentIndex = 0;
+    private ReactionEvent reactionEvent;
 
     @Getter
     private static BotInstance instance;
 
+
     public BotInstance() throws InterruptedException, LoginException {
         instance = this;
-        this.jda = JDABuilder.createDefault("MTI3MjkzOTM0MTk3NDMzOTY2OA.GcoaZZ.CEPv0uogkgZ4aaYEd3mM-40Vv9gRS_9UCiy2_k", Arrays.asList(GatewayIntent.values()))
+        this.jda = JDABuilder.create(
+                  "MTI4MDk4Mzc2OTg3MTk0NTc4MA.GeCZJb.bqSmOPYKY4Xe-gLx9lgDW40wnnd0ZZXr-UrE1c",
+                        EnumSet.allOf(GatewayIntent.class))
                 .setAutoReconnect(true)
                 .setActivity(Activity.playing("na serwerze MineClub.PL"))
                 .build().awaitReady();
+
 
 
         this.executorService = Executors.newSingleThreadScheduledExecutor();
@@ -57,24 +66,31 @@ public class BotInstance {
 
 
         NumberEvent numberEvent = new NumberEvent();
-        this.jda.addEventListener(new ReactionEvent(), new MessageEvent(), new JoinEvent(), numberEvent);
+        CommandManager commandManager = new CommandManager();
+        this.reactionEvent = new ReactionEvent();
+        this.jda.addEventListener(new UserEvent(), commandManager, this.reactionEvent, new MessageEvent(), new JoinEvent(), numberEvent);
+        commandManager.registerCommands();
         this.executorService.scheduleAtFixedRate(new UpdateStatsScheduler(this),1,3,TimeUnit.SECONDS);
         this.executorService.scheduleAtFixedRate(new UpdateAnkietaScheduler(this),1,3,TimeUnit.SECONDS);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutdown hook initiated.");
+
+            numberEvent.saveNumbersToDatabase();
+            executorService.shutdown();
+
             try {
-                try {
-                    numberEvent.saveNumbersToDatabase();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
-                if (this.executorService.awaitTermination(5, TimeUnit.SECONDS)) {
-                    System.out.println("Async shutdown");
+                if (!executorService.awaitTermination(2, TimeUnit.SECONDS)) {
+                    System.out.println("Executor did not terminate in the specified time.");
+                    executorService.shutdownNow();
 
-                    this.executorService.shutdown();
-
+                    if (!executorService.awaitTermination(2, TimeUnit.SECONDS)) {
+                        System.err.println("Executor did not terminate after shutdownNow.");
+                    }
                 }
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                System.err.println("Interrupted during shutdown.");
+                executorService.shutdownNow();
+                Thread.currentThread().interrupt();
             }
         }));
 
@@ -86,5 +102,6 @@ public class BotInstance {
         }
 
     }
+
 
 }
