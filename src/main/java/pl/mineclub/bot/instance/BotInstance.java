@@ -43,7 +43,7 @@ public class BotInstance  {
     public BotInstance() throws InterruptedException, LoginException {
         instance = this;
         this.jda = JDABuilder.create(
-                  "MTI4MDk4Mzc2OTg3MTk0NTc4MA.GeCZJb.bqSmOPYKY4Xe-gLx9lgDW40wnnd0ZZXr-UrE1c",
+                  "token",
                         EnumSet.allOf(GatewayIntent.class))
                 .setAutoReconnect(true)
                 .setActivity(Activity.playing("na serwerze MineClub.PL"))
@@ -52,7 +52,7 @@ public class BotInstance  {
 
 
         this.executorService = Executors.newSingleThreadScheduledExecutor();
-        this.mysqlManager = new MySQLManager("localhost", 3306, "trzeci", "24039rgtnsddeasef2w3", "mineclub");
+        this.mysqlManager = new MySQLManager("localhost", 3306, "user", "pass", "database");
 
         this.executorService.scheduleWithFixedDelay(() -> {
             if(currentIndex == 0) {
